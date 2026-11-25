@@ -1,0 +1,40 @@
+# Your media (private / large) — never committed
+/Raw File/
+/Example/
+/Guide Voice/
+/B-roll/
+/Output/
+/Video/
+/Insert/
+/Brief/
+/drive-download-*/
+*.zip
+
+# Build workspace: keep only the reference renderers
+/.work/**
+!/.work/tiktok_pro/
+!/.work/tiktok_pro/raw0135/
+!/.work/tiktok_pro/raw0135/render.py
+!/.work/tiktok_pro/raw0135/render_v4.py
+!/.work/tiktok_pro/raw0135/make_plan_v1.py
+!/.work/tiktok_pro/raw0135/edges.py
+
+# Licensed or client assets — bring your own
+/assets/audio_mixkit/
+/assets/brand/
+/assets/fonts/lineseed/
+
+# Internal handoff notes
+/HANDOFF*.md
+
+# Local / secrets
+.env
+.env.*
+*.key
+.claude/settings.local.json
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+Thumbs.db
+*.part.mp4
