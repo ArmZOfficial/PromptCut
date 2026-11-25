@@ -50,9 +50,13 @@ description: รสนิยมและมาตรฐานตัดคลิ�
   - ไม่ใช้ denoise แรง (`afftdn` ทำเสียงบาง) — highpass 75, ลด 250 Hz −2, เพิ่ม 4 kHz +2.5, compressor 2.5:1
   - สร้างเสียงจาก source ต่อเนื่องทั้ง piece (ไม่ fade ตรง punch-in cut กลางประโยค) fade 25 ms เฉพาะรอยต่อเทค + **room tone จริงจากกองถ่าย** รองใต้ทั้งคลิป
   - ไม่เร่งความเร็ว (atempo + loudnorm แบบ dynamic ทำเสียงขาด ๆ) — ทำให้กระชับด้วยการตัดช่วงเงียบ ไม่ใช่ time-stretch
-- **เพลง**: เบามาก (Mixkit Pop Track 03 ที่ volume ≈0.07) duck นุ่ม `sidechaincompress ratio=4 release=600` อาร์มชอบ "ดึงขึ้นนิดเดียว" ไม่ใช่ดัง
-- **SFX แบบมินิมอล เลือกตามบริบท** (อาร์มว่า SFX ถี่ = รก ถูกติมา 3 รอบ): ราว 6 เสียงต่อคลิป 26 วินาที ใช้คลัง `assets/sfx_muaaz/` และกติกา+ตารางเลือกเสียงใน [sfx.md](../tiktok-pro-showcase/references/sfx.md) ไม่ใช้เสียงบัซเซอร์
-- Loudness สุดท้าย −14 LUFS, true peak ≤ −1.5 dB (loudnorm สองรอบแบบ linear)
+- **เพลง**: groovy เด้ง (ค่าเริ่มต้น Mixkit Funky Hip Hop) ปรับอัตโนมัติเป็น −31.5 LUFS ก่อนผสม ดูหัวข้อเพลงใน sfx.md (Pop Track 03 = น่าเบื่อ) duck นุ่ม `sidechaincompress ratio=4 release=600` อาร์มชอบ "ดึงขึ้นนิดเดียว" ไม่ใช่ดัง
+- **SFX ฟีลไวรัลไทย เลือกตามบริบท ราว 12–13 เสียงต่อคลิป 26 วินาที** (boom, เสียงตลก, foley ตรงภาพ, sparkle) ระดับตาม tier ใน sfx.md — อาร์มปรับมา 4 รอบ: 6 เสียงเบา = โล่ง, 20 เสียง = รก, whoosh ล้วน = น่าเบื่อ ใช้คลัง `assets/sfx_muaaz/` และกติกา+ตารางเลือกเสียงใน [sfx.md](../tiktok-pro-showcase/references/sfx.md) ไม่ใช้เสียงบัซเซอร์
+- **สมดุลมิกซ์ที่อาร์มอนุมัติ (RAW0135 v21)** — อาร์มสั่ง "SFX ดังขึ้น" 5 รอบติด และ "เสียงพูดเบาลง" 1 รอบ: ตั้ง SFX ให้ดังกว่าที่คิดว่าพอดีไว้ก่อน เสียงพูดชัดแต่ไม่ตะโกน
+  - premaster เทียบสมดุล v15 (เพลง ~16–19 dB ใต้เสียงพูด): เสียงพูด −5 dB, เพลงเท่าเดิม, SFX +10 dB
+  - master: `acompressor=threshold=-22dB:ratio=2.5:attack=8:release=120:knee=4` → `volume=12.1dB` → `alimiter=limit=0.775:attack=2:release=60:level=false:latency=1` (ต้องใส่ `latency=1` ไม่งั้นเสียงช้า 2 ms) ผลจริง −12.8 LUFS, TP −2.0 dBTP, LRA 1.8
+  - compressor คืนเสียงพูดกลับมาราวครึ่งหนึ่ง: ลดในพรีมาสเตอร์ 5 dB เหลือจริง ~1.8 dB และ limiter กินยอด SFX บางส่วน จึงวัดผลจากไฟล์ส่งออกเสมอ (least-squares fit ไฟล์จริงกับ stem ของเสียงพูด/เพลง/SFX)
+- Loudness สุดท้าย −11 ถึง −13 LUFS, true peak ≤ −1.5 dBTP: ที่ −13.9 อาร์มสั่งดังขึ้น ที่ −10 อาร์มสั่งเบาลง
 
 ## จังหวะและเนื้อหา
 
@@ -71,7 +75,8 @@ description: รสนิยมและมาตรฐานตัดคลิ�
 ## QA ก่อนส่ง (ทุกข้อพร้อมตัวเลข)
 
 - `ffprobe`: 1080×1920, CFR 60 fps, H.264 High `yuv420p`, AAC 48 kHz stereo, ขนาด ≤300 MB
-- `ebur128`: I ≈ −14 LUFS, peak ≤ −1.5 dB; `volumedetect` L = R
+- `ebur128`/`loudnorm` วัด: I −11 ถึง −13 LUFS, true peak ≤ −1.5 dBTP; `volumedetect` L = R
+- แก้เฉพาะเสียง: `framemd5` ภาพตรงกับเวอร์ชันก่อนทุกเฟรม, sync 0 sample, ความยาวเสียงเท่าเดิม (ไม่ใช้ `-shortest`)
 - decode `-xerror` ผ่าน, `freezedetect` d=3 = 0
 - Whisper ถอดไฟล์จริงทั้งคลิป: ทุกประโยคในบทครบ ไม่มีคำขาด
 - contact sheet ทั้งคลิป + เฟรมรอบทุกรอยต่อ/การ์ด/ข้อความ: ไม่บังหน้า อยู่ใน safe zone วัตถุในการ์ดอยู่ในเฟรม

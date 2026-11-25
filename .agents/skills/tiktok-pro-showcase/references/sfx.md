@@ -4,25 +4,34 @@
 
 ## กติกา
 
-1. **หนึ่งเสียงต่อหนึ่งจังหวะ และอยู่ใต้เสียงพูดเสมอ** — คลิป 25–30 วินาทีใช้ราว 5–7 เสียง คำบนจอส่วนใหญ่ปล่อยเงียบ
-2. **เสียงต้องเล่าเรื่องเดียวกับภาพ** — อ่านบทและ edit plan ก่อน แล้วเลือกจากตารางด้านล่างทีละจังหวะ จดเหตุผลสั้น ๆ ข้างแต่ละเสียงใน plan
-3. **ตรงจังหวะ** — วางที่ `t − onset_s` เพื่อให้หัวเสียงตรงรอยตัดหรือคำเด้ง whoosh นำรอยตัด 0.02–0.05 วินาที
-4. **ระดับเท่ากันทุกไฟล์** — normalize เป็น peak −3 dBFS จาก `peak_dbfs` แล้วคูณ gain 0.10–0.16 ตัดหาง 1.8 วินาทีพร้อม fade 0.4 วินาที
-5. **ใช้เฉพาะเสียงทั่วไป** — เสียงที่เลียนแบรนด์หรือการ์ตูน (Discord, iPhone, Pokemon, SpongeBob) ไม่ได้ดาวน์โหลดมา
+0. **เริ่มจากบริบท ไม่ใช่จากคลัง** — ดูเฟรมและคำพูดตรงจุดนั้นก่อน แล้วถามว่า "ภาพ/คำนี้ให้อารมณ์อะไร" (งง, ผิด, ตึงเครียด, ผลเสีย, คลี่คลาย, ยืนยัน) แล้วเลือกเสียงที่ให้อารมณ์เดียวกัน หาเวลาท่าทางจริงจากเฟรม (เช่น มือแตะหัวที่ 2.6 วิ) เสียงที่ไม่มีเหตุผลจากภาพหรือคำ ตัดทิ้ง (boom บนท่าเกาหัวงง ๆ = ผิดอารมณ์)
+1. **ฟีลไวรัลไทย ไม่ใช่ whoosh เรียบ ๆ** — Hook และคำแรงใช้ boom, คำเตือนใช้เสียงตลก (แตก / cartoon pop), ภาพนิ่งใช้เสียงแฟลชกล้อง, จุดพลิกเป็นทางแก้ใช้ magic + sparkle (อาร์ม: whoosh ล้วน "น่าเบื่อ ไม่เหมือน TikTok ไวรัลไทย")
+2. **ราว 12–13 เสียงต่อคลิป 25–30 วินาที เฉพาะจังหวะที่มีความหมาย** — การเปลี่ยนการ์ดในชุดเดียวกันและคำที่ขึ้นทีละคำปล่อยเงียบ (20 เสียง = "รก", 6 เสียงเบา = "โล่ง")
+3. **ตรงจังหวะ และไม่ทับพยางค์แรก** — renderer ตัดไฟล์เริ่มที่ `onset_s − 0.03` แล้ววางที่เวลาเป้าหมาย − 0.03 (riser ใส่ความยาวเป็นค่าที่ 4 ให้จบตรง hit) เว้นเสียงที่คำแรกของคลิป เพราะทำให้ Whisper ได้ยินผิด ("เคยเห็น" → "ช่วยเห็น")
+4. **ระดับตาม tier** (ตั้ง peak เป้าหมายของแต่ละ hit จาก `peak_dbfs`): **T1 −15 dBFS** magic/เปลี่ยนฉากใหญ่, **T2 −18** boom, คำเตือน, การ์ด, ปุ่ม, **T3 −21** เสียงประกอบเล็ก — boom เบสหนักฟังดังกว่าตัวเลข จึงอยู่ T2 (ประวัติ: −21 แบน = ไม่ได้ยิน, −9/−12/−15 = ดัง, −13/−16/−19 = เบาลงหน่อย)
+5. **ใช้เฉพาะเสียงทั่วไป** — เสียงที่เลียนแบรนด์หรือการ์ตูนดัง (Discord, iPhone, Pokemon, SpongeBob) ไม่ได้ดาวน์โหลดมา
 
-## จังหวะ → เสียง
+## จังหวะ → เสียง (RAW0135 v9: อารมณ์ → เสียง)
 
-| จังหวะในคลิป | เลือกจาก | ตัวอย่างที่ใช้แล้วผ่าน |
-| --- | --- | --- |
-| Hook box / ข้อความเปิดเด้งขึ้น | `pop_main_pop`, `pop_bubble_pop`, `whoosh_impact_whoosh_drum` (hook แรง) | `pop_main_pop` 0.16 |
-| เข้า B-roll ชุดแรก | `whoosh_swoosh_01`, `whoosh_whoosh_02`, `whoosh_stereo_air_whoosh` | `whoosh_swoosh_01` 0.12 |
-| เข้า B-roll ชุดถัดไป | `whoosh_fast_woosh_01/02`, `whoosh_swipe`, `whoosh_cartoon_swipe` (โทนสนุก) | `whoosh_fast_woosh_01` 0.11 |
-| พลิกจากปัญหาเป็นทางแก้ | `whoosh_magic_wand_whoosh`, `ding_twinkling_notification` | `whoosh_magic_wand_whoosh` 0.10 |
-| ก่อนเฉลย / ตัวเลขผลลัพธ์ | `whoosh_riser_01`, `whoosh_perfect_riser`, `whoosh_breath_riser` แล้วตามด้วย `whoosh_whoosh_hit` | — |
-| การ์ดแบรนด์ / ข้อความยืนยัน | `ding_positive_notification`, `ding_ding_01`, `ding_idea` | `ding_positive_notification` 0.10 |
-| ปุ่ม CTA / UI บนจอ | `click_mouse_click_01`, `click_button_click`, `click_switch_click_01` | `click_mouse_click_01` 0.16 |
-| ข้อความเตือนว่าผิด | `ding_negative_notification_bleep` เบามาก หรือเว้นว่าง | — (อาร์มไม่ชอบเสียงบัซเซอร์) |
-| ภาพแชต / ข้อความเข้า | `ding_message_sound`, `click_glitch_click` | — |
-| ภาพมีของจริงเคลื่อน | foley ตรงภาพ: พิมพ์ = `foley_keyboard_typing`, ถ่ายรูป = `foley_camera_shutter_01`, เขียน = `foley_pencil`, ของแตก = `foley_plate_breaking` | — |
+| ภาพ / คำ | อารมณ์ | ใช้ | ทางเลือก |
+| --- | --- | --- | --- |
+| เกาหัว "เห็นแล้วต้องเกาหัว" | งง ขำ | `pop_cartoon_pop_01` T2 ตรงมือแตะหัว | `pop_cute_pop`, `pop_orb` |
+| เข้าตัวอย่างแรก | เปลี่ยนฉาก | `whoosh_swoosh_01` T2 | `whoosh_big_whoosh`, `whoosh_cartoon_swipe` |
+| กระทะร้อน + "วางผิดคู่!" | ผิดจนพัง (ในครัว) | `foley_plate_breaking` T2 | `click_glitch_click` (ไม่ใช้บัซเซอร์) |
+| ตัดไปภาพนิ่ง | ภาพถ่าย | `foley_camera_flash` T3 | `foley_camera_shutter_01` |
+| "ไม่มีตู้แช่!" | เตือน error | `click_glitch_click` T2 | `pop_cartoon_pop_01` |
+| คำเรียง "ปัญหา → สินค้า → ร้านค้า" | ตึงขึ้นเรื่อย ๆ | `whoosh_riser_01` T3 ยาว 2.95 วิ จบตรง hit | `whoosh_perfect_riser`, `whoosh_airy_stutter_riser_braam` |
+| "ขายไม่ออก!" | ผลเสียมาถึง | `whoosh_cold_suspense_impact` T2 | `whoosh_swish_boom_03`, `whoosh_whoosh_hit` |
+| ชี้คนดู "ร้านคุณ" | พูดตรงถึงคนดู | `pop_watery_pop` T3 | `pop_bubble_pop` |
+| จัดชั้นวางใหม่ | คลี่คลาย | `whoosh_magic_wand_whoosh` T1 | — |
+| ร้านเรียบร้อย | ดีขึ้น | `ding_twinkling_notification` T3 | `ding_positive_notification` |
+| การ์ดแบรนด์ | มีทางออก | `ding_idea` T2 | `ding_ding_01` |
+| ปุ่ม CTA | กดได้ | `click_mouse_click_01` T2 | `click_button_click` |
+| Hook ที่เป็นคำประกาศแรง / ตัวเลข | หยุดนิ้ว | `whoosh_swish_boom_02` T2 (เว้นพยางค์แรก) | `whoosh_kick_reverberant` |
+| แชต / พิมพ์ / เขียน | foley ตรงภาพ | `ding_message_sound`, `foley_keyboard_typing`, `foley_pencil` | — |
 
-ผลที่ต้องได้: ทุกเสียงใน plan มีเวลา ไฟล์ gain และเหตุผลจากบริบท แล้วตรวจ peak ช่วง SFX ใน `final.wav` ไม่ดังกว่าช่วงเสียงพูดรอบข้าง
+## เพลง
+
+ใช้เพลงจังหวะเด้ง groovy จาก Mixkit (`assets/audio_mixkit/`) ค่าเริ่มต้น `music_funky_hip_hop.mp3` เริ่มที่ 7.5 วินาที (ช่วงที่บีตเต็ม) renderer วัด LUFS ของช่วงที่ใช้แล้วปรับให้ได้ **−31.5 LUFS** ก่อนผสม (= ระดับที่อาร์มอนุมัติ) และ duck ใต้เสียงพูด เปลี่ยนเพลงด้วย `MUSIC=<ไฟล์> MUSIC_SS=<วินาที>` ตัวเลือกที่มี: `music_like_a_loop_machine`, `music_funky_fit`, `music_comical` (Pop Track 03 อาร์มว่า "น่าเบื่อ")
+
+ผลที่ต้องได้: ทุกเสียงใน plan มีเวลา tier และเหตุผลจากบริบท, peak ใน `mix.wav` ตรงแต่ละ hit ไม่เกินช่วงเสียงพูดรอบข้าง และ Whisper ถอดไฟล์จริงได้ครบทุกประโยค

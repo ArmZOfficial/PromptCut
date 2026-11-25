@@ -205,36 +205,55 @@ def main(final_out):
         run(FF + ["-i", voice_raw, "-filter_complex",
                   f"[0:a]atrim=0:{CUT_A},asetpts=PTS-STARTPTS[a0];[0:a]atrim={CUT_B}:{DUR_SRC},asetpts=PTS-STARTPTS[a1];"
                   f"[a0][a1]acrossfade=d=0.03", "-c:a", "pcm_s24le", tmpv]); voice_raw = tmpv
-    ins = ["-i", voice_raw, "-i", os.path.join(AUD, "music_pop_track_03.mp3")]
+    # music: picked by name, started where the groove is full, levelled to the approved bed loudness
+    MUSIC = os.environ.get("MUSIC", "music_funky_hip_hop.mp3")
+    MUSIC_SS = float(os.environ.get("MUSIC_SS", {"music_funky_hip_hop.mp3": 7.5}.get(MUSIC, 0.0)))
+    MUSIC_LUFS = -31.5   # = Pop Track 03 at volume 0.09, which Arm approved ("ดังขึ้นนิดนึง")
+    mpath = os.path.join(AUD, MUSIC)
+    rm = run(["ffmpeg", "-hide_banner", "-ss", f"{MUSIC_SS}", "-t", f"{DUR}", "-i", mpath, "-af", "ebur128", "-f", "null", "-"])
+    m_i = float(rm.stderr[rm.stderr.rfind("I:"):].split()[1])
+    MUSIC_GAIN = 10 ** ((MUSIC_LUFS - m_i) / 20)
+    ins = ["-i", voice_raw, "-ss", f"{MUSIC_SS}", "-i", mpath]
     # minimal SFX (user: busy SFX is annoying): one whoosh per B-roll run, one pop on the hook, one ding on the brand card
     # context-picked SFX (one sound per moment, under the voice). (file, [times], gain); gain is applied after
     # normalising each file to -3 dBFS peak, and each hit is shifted back by the file's measured onset.
     runs = [c[0] for k, c in enumerate(CUTS) if k == 0 or abs(CUTS[k - 1][1] - c[0]) > 1e-3]
+    # (file, time, target peak dBFS). Voice peaks ~-5 dBFS in the mix, so tiers sit 4-10 dB under it:
+    # T1 -9 = big transition / impact, T2 -12 = card change / key moment, T3 -15 = small text pop / click.
+    T1, T2, T3 = -15.0, -18.0, -21.0   # v7 -13/-16/-19 "เบาลงหน่อย"; v6 -9/-12/-15 loud; v5 ~-21 flat inaudible
+    # Context map (what is on screen / being said -> sound). Optional 4th value = max length in s (default 1.8).
     SFX_PLAN = [
-        ("pop_main_pop.mp3", [0.05], 0.16),                      # hook box pops in
-        ("whoosh_swoosh_01.wav", [runs[0] - 0.05], 0.12),        # into problem B-roll (cream / pan)
-        ("whoosh_fast_woosh_01.mp3", [runs[1] - 0.03], 0.11),    # into second problem run (cluttered)
-        ("whoosh_magic_wand_whoosh.wav", [runs[3] - 0.02], 0.10),  # turn to the fix: arranging -> neat store
-        ("ding_positive_notification.mp3", [M(23.66)], 0.10),   # Space Connex card
-        ("click_mouse_click_01.mp3", [M(24.02) + 0.18], 0.16),  # chat button lands (UI click)
+        ("pop_cartoon_pop_01.mp3", 2.65, T2),              # she scratches her head: quirky "huh?"
+        ("whoosh_swoosh_01.wav", runs[0] - 0.05, T2),      # into the cream example
+        ("foley_plate_breaking.mp3", M(5.66), T2),         # hot pan + "วางผิดคู่!" = kitchen disaster
+        ("foley_camera_flash.mp3", M(9.51), T3),           # cut to a still photo (snap)
+        ("click_glitch_click.mp3", M(9.70), T2),           # "ไม่มีตู้แช่!" = error / warning
+        ("whoosh_riser_01.mp3", runs[1] + 0.05, T3, 2.95), # tension builds under "ปัญหา -> สินค้า -> ร้านค้า"
+        ("whoosh_cold_suspense_impact.mp3", runs[2] - 0.03, T2),  # "ขายไม่ออก!" = the bad consequence lands
+        ("pop_watery_pop.wav", M(19.23), T3),              # she points at the viewer: "ร้านคุณ"
+        ("whoosh_magic_wand_whoosh.wav", runs[3] - 0.02, T1),     # turn to the fix: shelves get arranged
+        ("ding_twinkling_notification.mp3", M(22.24), T3), # neat store sparkle
+        ("ding_idea.mp3", M(23.66), T2),                   # Space Connex card = "we have the idea"
+        ("click_mouse_click_01.mp3", M(24.02) + 0.18, T2), # chat button lands
     ]
     idx_csv = {r.split(",")[0]: r.split(",") for r in open(os.path.join(SFXD, "index.csv"), encoding="utf-8").read().splitlines()[1:]}
-    sfx = []
-    for f, times, g in SFX_PLAN:
-        onset, peak = float(idx_csv[f][3]), float(idx_csv[f][4])
-        sfx.append((f, [t - onset for t in times], g * 10 ** ((-3.0 - peak) / 20)))
+    by_file = {}
+    for f, t, target, *L in SFX_PLAN:
+        by_file.setdefault((f, target, L[0] if L else 1.8), []).append(t - 0.03)
+    sfx = [(f, times, 10 ** ((target - float(idx_csv[f][4])) / 20), L) for (f, target, L), times in by_file.items()]
+    sfx_start = {e[0]: max(0.0, float(idx_csv[e[0]][3]) - 0.03) for e in SFX_PLAN}
     # mic is on the LEFT channel only -> take it as mono and centre it; no denoise (keeps voice full)
     fc = ["[0:a]pan=stereo|c0=c0|c1=c0,highpass=f=75,equalizer=f=250:t=q:w=1.2:g=-2,"
           "equalizer=f=4000:t=q:w=1.4:g=2.5,acompressor=threshold=-20dB:ratio=2.5:attack=10:release=120:makeup=2,"
           f"afade=t=out:st={DUR-0.2:.2f}:d=0.2,asplit=2[voice][sc]",
-          f"[1:a]atrim=0:{DUR},volume=0.07,afade=t=in:d=0.4,afade=t=out:st={DUR-1.6:.2f}:d=1.6,aformat=channel_layouts=stereo[mu]",
+          f"[1:a]atrim=0:{DUR},volume={MUSIC_GAIN:.4f},afade=t=in:d=0.4,afade=t=out:st={DUR-1.6:.2f}:d=1.6,aformat=channel_layouts=stereo[mu]",
           "[mu][sc]sidechaincompress=threshold=0.03:ratio=4:attack=30:release=600[duck]"]
     mix = ["[voice]", "[duck]"]; n = 2; idx = 2
-    for f, times, vol in sfx:
+    for f, times, vol, L in sfx:
         ins += ["-i", os.path.join(SFXD, f)]
         if times:
             tag = f"s{idx}"
-            fc.append(f"[{idx}:a]aformat=channel_layouts=stereo,atrim=0:1.8,afade=t=out:st=1.4:d=0.4,asplit={len(times)}" + "".join(f"[{tag}_{k}]" for k in range(len(times))))
+            fc.append(f"[{idx}:a]aformat=channel_layouts=stereo,atrim=start={sfx_start[f]:.3f}:duration={L},asetpts=PTS-STARTPTS,afade=t=out:st={L - (0.4 if L <= 1.8 else 0.06):.2f}:d={0.4 if L <= 1.8 else 0.06},asplit={len(times)}" + "".join(f"[{tag}_{k}]" for k in range(len(times))))
             for k, tt in enumerate(times):
                 ms = int(max(0, tt) * 1000)
                 fc.append(f"[{tag}_{k}]adelay={ms}|{ms},volume={vol}[{tag}d{k}]"); mix.append(f"[{tag}d{k}]"); n += 1
