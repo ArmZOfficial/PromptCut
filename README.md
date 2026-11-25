@@ -69,7 +69,7 @@ flowchart LR
 
 ```text
 AGENTS.md            ← จุดเริ่มของ AI agent
-.agents/skills/      ← สกิลแต่ละขั้น (บท, ถ่าย, เสียง, ตัด, QA, รสนิยมการตัด)
+.agents/skills/      ← สกิลแต่ละขั้น (วางแผนรายวัน, บท, หา B-roll, เสียง, ตัด, SFX, QA)
 scripts/             ← ตัวติดตั้ง + ตัวเรียก ffmpeg-skill
 assets/fonts/        ← ฟอนต์ไทย OFL
 PROMPTS.md           ← พรอมป์พร้อมคัดลอก
@@ -87,7 +87,7 @@ WORKFLOW.md          ← คู่มือเต็ม: โฟลเดอร�
 
 - [ffmpeg-skill](.agents/skills/ffmpeg-skill/) โดย kajisho5 (MIT)
 - ฟอนต์ Kanit, Noto Sans Thai, Anuphan, IBM Plex Sans Thai (SIL OFL 1.1) · แนะนำ [LINE Seed Sans TH](https://seed.line.me/) สำหรับ Super Text (ดาวน์โหลดเองลง `assets/fonts/lineseed/`)
-- เพลง/SFX/B-roll ใช้ไฟล์ที่คุณมีสิทธิ์ เช่น [Mixkit](https://mixkit.co/) และ [Pexels](https://www.pexels.com/)
+- SFX จาก [Sound Effects Creators Actually Use](https://muaazws.notion.site/Sound-Effects-Creators-Actually-Use-3fe84fe99b3181ad9cbed1be16bfa69b) (ดาวน์โหลดลง `assets/sfx_muaaz/`) · เพลงจาก [Mixkit](https://mixkit.co/) · B-roll/ภาพจาก [Pexels](https://www.pexels.com/) (สกิล `free-broll-finder` หาให้)
 - โพสต์คลิปที่ใช้เสียงหรือภาพ AI บน TikTok ต้องติดป้ายเนื้อหา AI
 
 <div align="center"><sub>Made in Thailand 🇹🇭 · ตัดเร็ว ส่งไว ไม่ต้องนั่งไล่ timeline</sub></div>

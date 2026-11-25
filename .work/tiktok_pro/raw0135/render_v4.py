@@ -10,6 +10,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 AROLL = os.path.join(HERE, "build_v3a", "joined.mkv")   # v1 cut, reframed higher
 WORK = os.path.join(HERE, os.environ.get("WORK_NAME", "build_v4"))
 AUD = os.path.join(ROOT, "assets", "audio_mixkit")
+SFXD = os.path.join(ROOT, "assets", "sfx_muaaz")   # Muaaz "Sound Effects Creators Actually Use" (index.csv: onset/peak)
 W, H, FPS = 1080, 1920, 60
 DUR_SRC = 26.65   # end on her smile, before she reaches for the mic
 # tighten: drop the redundant line "ก็อาจจะทำให้เกิดปัญหา กับสินค้ากับทางร้านค้าได้" then speed up 1.1x
@@ -45,9 +46,9 @@ CUTS = [
     (3.81, 5.56, P + "02_cream_5468796.mp4", 0.0),
     (5.56, 7.29, P + "03b_pan_6216462.mp4", 2.6),
     (7.29, 9.51, P + "04_meat_39327769.mp4", 0.5),
-    (9.51, 10.96, "B-roll/ai_fresh_counter.png", 0),
+    (9.51, 10.96, "B-roll/pexels_photos/p_40101227.jpg", 0),
     (13.54, 14.86, P + "05_cluttered_26747688.mp4", 0.0),
-    (16.56, 17.89, "B-roll/ai_messy_shelf.png", 0),
+    (16.56, 17.89, "B-roll/pexels_photos/p_18121624.jpg", 0),
     (17.89, 19.40, P + "04_meat_39327769.mp4", 3.0),   # covers take jump at 19.19
     (20.84, 22.24, P + "08_arranging_6963727.mp4", 1.0),
     (22.24, 23.64, P + "07_neat_store_31858797.mp4", 0.0),
@@ -156,7 +157,7 @@ def main(final_out):
                       "-c:v", "libx264", "-preset", "fast", "-crf", "14", p])
         else:
             path = os.path.join(ROOT, src)
-            img = src.lower().endswith(".png")
+            img = src.lower().endswith((".png", ".jpg", ".jpeg"))
             bin_ = (["-loop", "1", "-framerate", str(FPS), "-i", path] if img else ["-ss", f"{ss:.3f}", "-i", path])
             fc = (f"[0:v]boxblur=28:2,eq=brightness=-0.12:saturation=0.85,fps={FPS}[bg];"
                   f"[1:v]scale=w='trunc({CW}*(1+0.07*t/{d:.3f})/2)*2':h=-2:eval=frame,"
@@ -206,8 +207,22 @@ def main(final_out):
                   f"[a0][a1]acrossfade=d=0.03", "-c:a", "pcm_s24le", tmpv]); voice_raw = tmpv
     ins = ["-i", voice_raw, "-i", os.path.join(AUD, "music_pop_track_03.mp3")]
     # minimal SFX (user: busy SFX is annoying): one whoosh per B-roll run, one pop on the hook, one ding on the brand card
-    sfx = [("sfx_whoosh_fast.mp3", whoosh, 0.10), ("sfx_pop_light.mp3", [0.05], 0.12),
-           ("sfx_ding.mp3", [M(23.66)], 0.10)]
+    # context-picked SFX (one sound per moment, under the voice). (file, [times], gain); gain is applied after
+    # normalising each file to -3 dBFS peak, and each hit is shifted back by the file's measured onset.
+    runs = [c[0] for k, c in enumerate(CUTS) if k == 0 or abs(CUTS[k - 1][1] - c[0]) > 1e-3]
+    SFX_PLAN = [
+        ("pop_main_pop.mp3", [0.05], 0.16),                      # hook box pops in
+        ("whoosh_swoosh_01.wav", [runs[0] - 0.05], 0.12),        # into problem B-roll (cream / pan)
+        ("whoosh_fast_woosh_01.mp3", [runs[1] - 0.03], 0.11),    # into second problem run (cluttered)
+        ("whoosh_magic_wand_whoosh.wav", [runs[3] - 0.02], 0.10),  # turn to the fix: arranging -> neat store
+        ("ding_positive_notification.mp3", [M(23.66)], 0.10),   # Space Connex card
+        ("click_mouse_click_01.mp3", [M(24.02) + 0.18], 0.16),  # chat button lands (UI click)
+    ]
+    idx_csv = {r.split(",")[0]: r.split(",") for r in open(os.path.join(SFXD, "index.csv"), encoding="utf-8").read().splitlines()[1:]}
+    sfx = []
+    for f, times, g in SFX_PLAN:
+        onset, peak = float(idx_csv[f][3]), float(idx_csv[f][4])
+        sfx.append((f, [t - onset for t in times], g * 10 ** ((-3.0 - peak) / 20)))
     # mic is on the LEFT channel only -> take it as mono and centre it; no denoise (keeps voice full)
     fc = ["[0:a]pan=stereo|c0=c0|c1=c0,highpass=f=75,equalizer=f=250:t=q:w=1.2:g=-2,"
           "equalizer=f=4000:t=q:w=1.4:g=2.5,acompressor=threshold=-20dB:ratio=2.5:attack=10:release=120:makeup=2,"
@@ -216,10 +231,10 @@ def main(final_out):
           "[mu][sc]sidechaincompress=threshold=0.03:ratio=4:attack=30:release=600[duck]"]
     mix = ["[voice]", "[duck]"]; n = 2; idx = 2
     for f, times, vol in sfx:
-        ins += ["-i", os.path.join(AUD, f)]
+        ins += ["-i", os.path.join(SFXD, f)]
         if times:
             tag = f"s{idx}"
-            fc.append(f"[{idx}:a]aformat=channel_layouts=stereo,asplit={len(times)}" + "".join(f"[{tag}_{k}]" for k in range(len(times))))
+            fc.append(f"[{idx}:a]aformat=channel_layouts=stereo,atrim=0:1.8,afade=t=out:st=1.4:d=0.4,asplit={len(times)}" + "".join(f"[{tag}_{k}]" for k in range(len(times))))
             for k, tt in enumerate(times):
                 ms = int(max(0, tt) * 1000)
                 fc.append(f"[{tag}_{k}]adelay={ms}|{ms},volume={vol}[{tag}d{k}]"); mix.append(f"[{tag}d{k}]"); n += 1

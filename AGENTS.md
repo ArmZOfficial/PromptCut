@@ -6,4 +6,6 @@ When the user asks to create videos, use [affiliate-video-factory](.agents/skill
 
 Before cutting, revising, or reviewing any TikTok clip, read [arm-tiktok-taste](.agents/skills/arm-tiktok-taste/SKILL.md): Arm's editing taste, brand (Space Connex), audio mix rules, and QA bar.
 
+Planning today's clip (ideas, topic, hook, script, prompts): [content-planner](.agents/skills/content-planner/SKILL.md). Missing footage or a non-commercial image: [free-broll-finder](.agents/skills/free-broll-finder/SKILL.md). Choosing sound effects: [sfx.md](.agents/skills/tiktok-pro-showcase/references/sfx.md).
+
 For installation verification, use the launcher’s `doctor` and confirm local Whisper is available alongside FFmpeg and FFprobe. For a media job, verify the actual output with the delivery spec before declaring it ready.
